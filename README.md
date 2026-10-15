@@ -16,12 +16,20 @@ backend, works fully offline.
 - JSON backup/restore. Light/dark theme.
 
 ## Tech Stack
-- Expo (SDK 56/57) + Expo Router (file-based navigation)
+- Expo (SDK 57, React Native 0.86, React 19) + Expo Router (file-based navigation)
 - TypeScript (strict)
 - expo-sqlite (async API) for local storage
 - react-native-gifted-charts for visualizations
 - Zustand for state, date-fns for dates
 - expo-crypto (PIN hashing), expo-file-system + expo-sharing (backup)
+
+## Documentation
+Full planning and design docs live in [`docs/`](docs/):
+- [Architecture (SDA)](docs/ARCHITECTURE.md)
+- [Product Requirements (PRD)](docs/PRD.md)
+- [Technical Requirements (TRD)](docs/TRD.md)
+- [Database Schema](docs/SCHEMA.md)
+- [App Flow](docs/APP_FLOW.md)
 
 ## Getting Started
 
@@ -47,14 +55,22 @@ npm run typecheck # TypeScript check
 ```
 app/                 # Expo Router screens (file-based routes)
   (tabs)/            # Dashboard, Stations, Daily Entry, Reports, Settings
+  station/[id].tsx   # Station detail: tanks, nozzles, analytics
+  prices/[id].tsx    # Fuel price management
+  profiles.tsx       # Profile management (owner)
 src/
-  db/                # SQLite connection, schema, migrations
-  repositories/      # Data-access layer (one per entity)
-  services/          # Aggregation / KPI / validation logic
-  stores/            # Zustand stores (session, filters, ...)
-  components/        # Reusable UI kit
+  db/                # SQLite connection, schema, migrations, types
+  repositories/      # Data-access layer (profile, station, price, entry)
+  services/          # Aggregation / charts / crypto / dates / backup
+  stores/            # Zustand stores (session, theme, filters)
+  components/        # Reusable UI kit + AuthGate + DayExtras
   theme/             # Theme tokens, light/dark
 ```
+
+## First run & roles
+On first launch you create an **Owner** profile with a PIN. The Owner can add stations,
+tanks, nozzles, prices, and additional **Staff** profiles scoped to specific stations.
+Staff unlock with their own PIN and only see their assigned stations.
 
 ## Data & Privacy
 All data lives on the device. Use **Settings → Backup** to export a JSON snapshot you can
