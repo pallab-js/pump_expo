@@ -31,7 +31,7 @@ erDiagram
 | Table | Purpose | Notable columns / constraints |
 |---|---|---|
 | `schema_version` | Migration tracking | `version` PK |
-| `profile` | Local user profiles | `role` ∈ {owner, staff}; `pin_hash`, `pin_salt`; `failed_attempts`, `locked_until` (brute-force guard, schema v2) |
+| `profile` | Local user profiles | `role` ∈ {owner, staff}; `pin_hash`, `pin_salt`; `failed_attempts`, `locked_until` (brute-force guard, schema v2); `biometric_enabled` (Face ID/Touch ID opt-in, schema v3) |
 | `profile_station` | Staff → station scope | PK `(profile_id, station_id)`; cascades |
 | `station` | Retail outlets | `name`, `location`, `code`, `active` |
 | `fuel_type` | Fuel catalog (seeded) | unique `code`; `unit`, `color` |

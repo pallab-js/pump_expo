@@ -14,7 +14,8 @@ backend, works fully offline.
   payment split (cash/card/UPI/credit), expenses, staff shifts.
 - Daily fuel price management.
 - Reports with date/station/fuel filters.
-- PIN-protected local roles: Owner (full access) and Manager/Staff (scoped).
+- PIN-protected local roles: Owner (full access) and Manager/Staff (scoped), with
+  brute-force lockout and optional Face ID / Touch ID unlock.
 - JSON backup/restore. Light/dark theme.
 
 ## Tech Stack

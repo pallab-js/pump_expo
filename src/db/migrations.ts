@@ -183,6 +183,20 @@ export const migrations: Migration[] = [
       }
     },
   },
+  {
+    version: 3,
+    name: 'biometric_opt_in',
+    up: async (db) => {
+      // Per-profile opt-in for biometric (Face ID / Touch ID) unlock.
+      const cols = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(profile)`);
+      const names = new Set(cols.map((c) => c.name));
+      if (!names.has('biometric_enabled')) {
+        await db.execAsync(
+          `ALTER TABLE profile ADD COLUMN biometric_enabled INTEGER NOT NULL DEFAULT 0;`
+        );
+      }
+    },
+  },
 ];
 
 export const LATEST_VERSION = migrations[migrations.length - 1]?.version ?? 0;

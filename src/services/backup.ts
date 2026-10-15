@@ -28,7 +28,7 @@ export interface BackupFile {
 export const BACKUP_FORMAT_VERSION = 1;
 
 /** Columns stripped from `profile` rows on export (credential material). */
-const PROFILE_SENSITIVE_COLUMNS = ['pin_hash', 'pin_salt', 'failed_attempts', 'locked_until'];
+const PROFILE_SENSITIVE_COLUMNS = ['pin_hash', 'pin_salt', 'failed_attempts', 'locked_until', 'biometric_enabled'];
 
 /** A placeholder hash written on restore for profiles whose PIN was stripped. */
 export const RESTORE_PIN_PLACEHOLDER = 'RESET_REQUIRED';
@@ -81,6 +81,7 @@ function sanitizeProfileRow(row: Record<string, unknown>): Record<string, unknow
     pin_salt: RESTORE_PIN_PLACEHOLDER,
     failed_attempts: 0,
     locked_until: null,
+    biometric_enabled: 0,
   };
 }
 

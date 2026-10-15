@@ -13,6 +13,7 @@ import {
   getProfile,
   MAX_PIN_ATTEMPTS,
   lockoutSeconds,
+  setBiometricEnabled,
 } from '@/repositories/profileRepo';
 import * as Crypto from 'expo-crypto';
 
@@ -181,5 +182,20 @@ describe('profileRepo', () => {
     expect(lockoutSeconds(MAX_PIN_ATTEMPTS * 2)).toBe(60);
     expect(lockoutSeconds(MAX_PIN_ATTEMPTS * 3)).toBe(120);
     expect(lockoutSeconds(MAX_PIN_ATTEMPTS * 100)).toBe(15 * 60); // capped
+  });
+
+  it('persists the biometric opt-in flag per profile', async () => {
+    const db = await createInMemoryDatabase();
+    const id = await createProfile(db, { name: 'Owner', role: 'owner', pin: '1234' });
+    let p = await getProfile(db, id);
+    expect(p?.biometric_enabled).toBe(0); // default off
+
+    await setBiometricEnabled(db, id, true);
+    p = await getProfile(db, id);
+    expect(p?.biometric_enabled).toBe(1);
+
+    await setBiometricEnabled(db, id, false);
+    p = await getProfile(db, id);
+    expect(p?.biometric_enabled).toBe(0);
   });
 });

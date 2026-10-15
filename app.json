@@ -9,7 +9,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.pallabjs.fuelpumpmanager"
+      "bundleIdentifier": "com.pallabjs.fuelpumpmanager",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Use Face ID to unlock FuelPump Manager instead of entering your PIN."
+      }
     },
     "android": {
       "package": "com.pallabjs.fuelpumpmanager"
@@ -21,7 +24,13 @@
       "expo-router",
       "expo-sqlite",
       "expo-status-bar",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Use Face ID to unlock FuelPump Manager instead of entering your PIN."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -13,6 +13,7 @@ import { useSessionStore } from '@/stores/sessionStore';
 import { useTheme } from '@/theme/useTheme';
 import { Button, Input, Card } from '@/components';
 import { PinPad } from '@/components/PinPad';
+import { isBiometricAvailable, biometricLabel, authenticateBiometric } from '@/services/biometrics';
 
 type Phase = 'loading' | 'setup' | 'pick' | 'pin';
 
@@ -31,6 +32,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const [confirmPin, setConfirmPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [bioLabel, setBioLabel] = useState<string | null>(null);
 
   const refresh = async () => {
     const db = await getDatabase();
@@ -90,6 +92,32 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   const containerStyle = [styles.container, { backgroundColor: t.colors.background }];
 
+  // Attempt biometric unlock for a profile; returns true if it unlocked.
+  const tryBiometric = async (p: Profile): Promise<boolean> => {
+    if (!p.biometric_enabled) return false;
+    if (!(await isBiometricAvailable())) return false;
+    const ok = await authenticateBiometric(`Unlock as ${p.name}`);
+    if (ok) {
+      unlock(p);
+      return true;
+    }
+    return false;
+  };
+
+  // Move to the PIN phase for a profile, auto-prompting biometrics first.
+  const selectProfile = async (p: Profile) => {
+    setSelected(p);
+    setPin('');
+    setError(null);
+    setPhase('pin');
+    if (p.biometric_enabled && (await isBiometricAvailable())) {
+      setBioLabel(await biometricLabel());
+      await tryBiometric(p);
+    } else {
+      setBioLabel(null);
+    }
+  };
+
   if (phase === 'loading') {
     return (
       <View style={containerStyle}>
@@ -143,6 +171,15 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         <View style={styles.gap} />
         <PinPad value={pin} onChange={setPin} maxLength={pin.length > 4 ? pin.length : 4} />
         {error ? <Text style={[styles.err, { color: t.colors.danger }]}>{error}</Text> : null}
+        {bioLabel ? (
+          <View style={styles.bioRow}>
+            <Button
+              title={`Unlock with ${bioLabel}`}
+              variant="ghost"
+              onPress={() => tryBiometric(selected)}
+            />
+          </View>
+        ) : null}
         <View style={styles.pinActions}>
           <Button
             title="Back"
@@ -151,6 +188,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
               setSelected(null);
               setPin('');
               setError(null);
+              setBioLabel(null);
               setPhase('pick');
             }}
           />
@@ -172,12 +210,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
             <Button
               title={`${p.name}  ·  ${p.role === 'owner' ? 'Owner' : 'Staff'}`}
               variant="secondary"
-              onPress={() => {
-                setSelected(p);
-                setPin('');
-                setError(null);
-                setPhase('pin');
-              }}
+              onPress={() => selectProfile(p)}
             />
           </Card>
         ))}
@@ -195,6 +228,7 @@ const styles = StyleSheet.create({
   gap: { height: 12 },
   err: { marginTop: 12, fontWeight: '600' },
   pinActions: { flexDirection: 'row', gap: 12, marginTop: 24 },
+  bioRow: { marginTop: 16 },
   profileList: { width: '100%', maxWidth: 420, gap: 10 },
   profileCard: { padding: 8 },
 });

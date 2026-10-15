@@ -63,6 +63,18 @@ export async function updateProfilePin(
   ]);
 }
 
+/** Enable or disable biometric unlock opt-in for a profile. */
+export async function setBiometricEnabled(
+  db: SQLiteDatabase,
+  id: number,
+  enabled: boolean
+): Promise<void> {
+  await db.runAsync('UPDATE profile SET biometric_enabled = ? WHERE id = ?', [
+    enabled ? 1 : 0,
+    id,
+  ]);
+}
+
 export async function deleteProfile(db: SQLiteDatabase, id: number): Promise<void> {
   await db.runAsync('DELETE FROM profile WHERE id = ?', [id]);
 }

@@ -8,3 +8,6 @@ jest.mock('expo-sqlite');
 
 // Back expo-crypto with Node's crypto for deterministic PIN hashing in tests.
 jest.mock('expo-crypto');
+
+// Mock the native biometric module (simulated enrolled device by default).
+jest.mock('expo-local-authentication');

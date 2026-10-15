@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen, Header, Card, Button, Select, Badge } from '@/components';
 import { useThemeStore, type ThemePreference } from '@/stores/themeStore';
 import { useSessionStore } from '@/stores/sessionStore';
@@ -8,6 +8,8 @@ import { useTheme } from '@/theme/useTheme';
 import { getDatabase, _resetDatabaseCache } from '@/db';
 import { shareBackup, pickAndRestoreBackup } from '@/services/backupIO';
 import { seedDemoData, hasAnyStations } from '@/services/seed';
+import { getProfile, setBiometricEnabled } from '@/repositories/profileRepo';
+import { isBiometricAvailable, biometricLabel, authenticateBiometric } from '@/services/biometrics';
 
 export default function SettingsScreen() {
   const t = useTheme();
@@ -19,6 +21,47 @@ export default function SettingsScreen() {
 
   const [busy, setBusy] = useState<null | 'export' | 'import' | 'seed'>(null);
   const [msg, setMsg] = useState<string | null>(null);
+
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioLabel, setBioLabel] = useState('Biometrics');
+  const [bioEnabled, setBioEnabled] = useState(false);
+
+  const loadBiometric = useCallback(async () => {
+    const available = await isBiometricAvailable();
+    setBioAvailable(available);
+    if (available) setBioLabel(await biometricLabel());
+    if (profile) {
+      const db = await getDatabase();
+      const fresh = await getProfile(db, profile.id);
+      setBioEnabled(!!fresh?.biometric_enabled);
+    }
+  }, [profile]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadBiometric();
+    }, [loadBiometric])
+  );
+
+  const toggleBiometric = async () => {
+    if (!profile) return;
+    const db = await getDatabase();
+    if (bioEnabled) {
+      await setBiometricEnabled(db, profile.id, false);
+      setBioEnabled(false);
+      setMsg(`${bioLabel} unlock disabled.`);
+      return;
+    }
+    // Enabling: confirm the biometric actually works on this device first.
+    const ok = await authenticateBiometric(`Enable ${bioLabel} unlock`);
+    if (!ok) {
+      setMsg(`${bioLabel} not confirmed — still disabled.`);
+      return;
+    }
+    await setBiometricEnabled(db, profile.id, true);
+    setBioEnabled(true);
+    setMsg(`${bioLabel} unlock enabled.`);
+  };
 
   const onExport = async () => {
     setBusy('export');
@@ -123,6 +166,27 @@ export default function SettingsScreen() {
           onChange={setPreference}
         />
       </Card>
+
+      {bioAvailable ? (
+        <>
+          <View style={styles.gap} />
+          <Card style={styles.sessionCard}>
+            <View style={styles.flex}>
+              <Text style={[styles.cardTitle, { color: t.colors.text }]}>{bioLabel} unlock</Text>
+              <Text style={[styles.muted, { color: t.colors.textMuted }]}>
+                {bioEnabled
+                  ? `Unlock with ${bioLabel} instead of your PIN.`
+                  : `Use ${bioLabel} as a faster unlock. Your PIN still works.`}
+              </Text>
+            </View>
+            <Button
+              title={bioEnabled ? 'Disable' : 'Enable'}
+              variant={bioEnabled ? 'secondary' : 'primary'}
+              onPress={toggleBiometric}
+            />
+          </Card>
+        </>
+      ) : null}
 
       {isOwner ? (
         <>

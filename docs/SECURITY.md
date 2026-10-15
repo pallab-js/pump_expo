@@ -20,6 +20,12 @@ requests).
   counter. While locked, even a correct PIN is refused until the window elapses.
 - **Auto-lock.** The session locks automatically when the app is backgrounded/inactive
   (`AppState`), so a shared counter device re-prompts for a PIN on resume.
+- **Biometric unlock (optional).** Per-profile opt-in (stored in `profile.biometric_enabled`)
+  lets a user unlock with **Face ID / Touch ID** (`expo-local-authentication`) as a
+  convenience over the PIN. Enabling requires a successful biometric confirmation; the PIN
+  always remains a fallback, and biometric availability is re-checked at unlock time. The
+  opt-in flag is **stripped from backups** (device-specific), so restored profiles start
+  with biometrics off and a reset-required PIN.
 - **PIN guidance.** 6-digit PINs are recommended in the UI (4-digit minimum still allowed).
 - **Constant-time-ish comparison** of hashes avoids trivial early-exit timing leaks.
 

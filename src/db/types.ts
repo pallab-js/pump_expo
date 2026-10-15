@@ -11,6 +11,7 @@ export interface Profile {
   created_at: string;
   failed_attempts: number;
   locked_until: string | null;
+  biometric_enabled: number; // 0 | 1
 }
 
 export interface ProfileStation {
