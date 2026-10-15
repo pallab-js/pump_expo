@@ -19,7 +19,7 @@ backend, works fully offline.
 - Expo (SDK 57, React Native 0.86, React 19) + Expo Router (file-based navigation)
 - TypeScript (strict)
 - expo-sqlite (async API) for local storage
-- react-native-gifted-charts for visualizations
+- react-native-gifted-charts (+ expo-linear-gradient) for visualizations
 - Zustand for state, date-fns for dates
 - expo-crypto (PIN hashing), expo-file-system + expo-sharing (backup)
 

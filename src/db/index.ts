@@ -5,6 +5,7 @@ import { migrations, LATEST_VERSION } from './migrations';
 export const DB_NAME = 'fuelpump.db';
 
 let dbInstance: SQLiteDatabase | null = null;
+let initPromise: Promise<SQLiteDatabase> | null = null;
 
 /**
  * Run the schema_version-tracked migrations against a database.
@@ -28,7 +29,7 @@ export async function runMigrations(db: SQLiteDatabase): Promise<void> {
   for (const migration of migrations) {
     if (migration.version > current) {
       await migration.up(db);
-      await db.runAsync('INSERT INTO schema_version (version) VALUES (?)', [
+      await db.runAsync('INSERT OR IGNORE INTO schema_version (version) VALUES (?)', [
         migration.version,
       ]);
     }
@@ -37,14 +38,25 @@ export async function runMigrations(db: SQLiteDatabase): Promise<void> {
 
 /**
  * Open (once) the on-device database and ensure migrations are applied.
- * Subsequent calls return the cached instance.
+ * Concurrent callers share a single initialization promise so migrations
+ * never run twice in parallel (which previously caused a UNIQUE constraint
+ * failure on schema_version).
  */
 export async function getDatabase(): Promise<SQLiteDatabase> {
   if (dbInstance) return dbInstance;
-  const db = await SQLite.openDatabaseAsync(DB_NAME);
-  await runMigrations(db);
-  dbInstance = db;
-  return db;
+  if (!initPromise) {
+    initPromise = (async () => {
+      const db = await SQLite.openDatabaseAsync(DB_NAME);
+      await runMigrations(db);
+      dbInstance = db;
+      return db;
+    })().catch((e) => {
+      // Allow a retry on the next call if init failed.
+      initPromise = null;
+      throw e;
+    });
+  }
+  return initPromise;
 }
 
 /** Current target schema version. */
@@ -58,6 +70,7 @@ export function latestSchemaVersion(): number {
  */
 export function _resetDatabaseCache(): void {
   dbInstance = null;
+  initPromise = null;
 }
 
 /**

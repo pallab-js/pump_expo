@@ -21,7 +21,11 @@ import {
   addStaff,
 } from '@/repositories/entryRepo';
 import { useTheme } from '@/theme/useTheme';
-import { Card, Button, Input, Select, Badge } from '@/components';
+import { Card } from './Card';
+import { Button } from './Button';
+import { Input } from './Input';
+import { Select } from './Select';
+import { Badge } from './Badge';
 
 const METHOD_LABELS: Record<PaymentMethod, string> = {
   cash: 'Cash',

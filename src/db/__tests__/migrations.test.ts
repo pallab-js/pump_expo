@@ -68,4 +68,20 @@ describe('migrations', () => {
     expect(Math.max(...versionRows.map((r) => r.version))).toBe(LATEST_VERSION);
     await db.closeAsync();
   });
+
+  it('runs migrations only once under concurrent runMigrations on the same db', async () => {
+    const db = await SQLite.openDatabaseAsync(':memory:');
+    // Simulate two callers racing to initialize the same connection.
+    await Promise.all([runMigrations(db), runMigrations(db)]);
+    const versionRows = await db.getAllAsync<{ version: number }>(
+      'SELECT version FROM schema_version'
+    );
+    // No duplicate version rows despite the race.
+    expect(versionRows).toHaveLength(migrations.length);
+    const fuelCount = await db.getFirstAsync<{ c: number }>(
+      'SELECT COUNT(*) AS c FROM fuel_type'
+    );
+    expect(fuelCount?.c).toBe(SEED_FUEL_TYPES.length);
+    await db.closeAsync();
+  });
 });
