@@ -28,11 +28,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build native test dependency (better-sqlite3)
+        run: npm rebuild better-sqlite3
+
       - name: Typecheck
         run: npm run typecheck
 
       - name: Unit tests
-        run: npm test -- --ci --coverage
+        run: npm run test:ci
 
       - name: Bundle check (iOS export)
         run: npx expo export --platform ios --output-dir dist
