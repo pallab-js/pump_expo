@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "FuelPump Manager",
+    "slug": "fuelpump-manager",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "fuelpump",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pallabjs.fuelpumpmanager"
+    },
+    "android": {
+      "package": "com.pallabjs.fuelpumpmanager"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-status-bar",
+      "expo-sharing"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
