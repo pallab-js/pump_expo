@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
-import { useFocusEffect, useLocalSearchParams, Stack } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { getDatabase } from '@/db';
 import type { Station, Tank, Nozzle, FuelType } from '@/db/types';
 import {
@@ -21,6 +21,7 @@ export default function StationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const stationId = Number(id);
   const t = useTheme();
+  const router = useRouter();
   const isOwner = useSessionStore((s) => s.profile?.role === 'owner');
 
   const [station, setStation] = useState<Station | null>(null);
@@ -138,6 +139,9 @@ export default function StationDetailScreen() {
       <Stack.Screen options={{ title: station?.name ?? 'Station' }} />
       <Screen>
         <Header title={station?.name ?? 'Station'} subtitle={station?.location ?? undefined} />
+
+        <Button title="Manage Fuel Prices" variant="secondary" onPress={() => router.push(`/prices/${stationId}`)} />
+        <View style={styles.bigGap} />
 
         {/* Tanks */}
         <Text style={[styles.section, { color: t.colors.text }]}>Tanks</Text>
