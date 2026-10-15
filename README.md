@@ -1,5 +1,7 @@
 # FuelPump Manager
 
+[![CI](https://github.com/pallab-js/pump_expo/actions/workflows/ci.yml/badge.svg)](https://github.com/pallab-js/pump_expo/actions/workflows/ci.yml)
+
 A local-first iOS mobile app (React Native + Expo) to manage multiple fuel pump retail
 outlets from a single central dashboard. All data is stored on-device with SQLite. No
 backend, works fully offline.

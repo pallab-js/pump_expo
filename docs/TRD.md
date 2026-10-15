@@ -57,6 +57,13 @@ __mocks__/                # expo-sqlite (better-sqlite3), expo-crypto (node:cryp
 - `npx expo start` to run on device via Expo Go.
 - `npx expo export --platform ios` is used as a CI-free bundle check.
 
+## Continuous integration
+- **GitHub Actions** (`.github/workflows/ci.yml`) runs on every push/PR to `main`:
+  `npm ci` → `npm run typecheck` → `npm test -- --ci --coverage` → `expo export --platform ios`.
+- A root `.npmrc` sets `legacy-peer-deps=true` so `npm ci` resolves the dependency tree the
+  same way locally and in CI. `better-sqlite3` (test engine) builds natively on
+  `ubuntu-latest`.
+
 ## Known constraints
 - Peer-dependency alignment requires `--legacy-peer-deps` for a few JS-only packages;
   native module versions are pinned to the SDK 57 set.
