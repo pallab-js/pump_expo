@@ -5,3 +5,6 @@
 // The implementation lives in <rootDir>/__mocks__/expo-sqlite.js (jest's
 // manual-mock convention for node_modules packages).
 jest.mock('expo-sqlite');
+
+// Back expo-crypto with Node's crypto for deterministic PIN hashing in tests.
+jest.mock('expo-crypto');
