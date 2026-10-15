@@ -1,25 +1,39 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Link } from 'expo-router';
+import { View, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Screen, Header, Card, Button, Select } from '@/components';
+import { useThemeStore, type ThemePreference } from '@/stores/themeStore';
 
 export default function SettingsScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Settings</Text>
-      <Text style={styles.subtitle}>Theme, profiles, backup.</Text>
+  const router = useRouter();
+  const { preference, setPreference } = useThemeStore();
 
-      <Link href="/db-debug" asChild>
-        <Pressable style={styles.link}>
-          <Text style={styles.linkText}>Open Database Debug →</Text>
-        </Pressable>
-      </Link>
-    </View>
+  return (
+    <Screen>
+      <Header title="Settings" subtitle="Theme, profiles, backup" />
+
+      <Card>
+        <Select<ThemePreference>
+          label="Appearance"
+          options={[
+            { label: 'System', value: 'system' },
+            { label: 'Light', value: 'light' },
+            { label: 'Dark', value: 'dark' },
+          ]}
+          value={preference}
+          onChange={setPreference}
+        />
+      </Card>
+
+      <View style={styles.gap} />
+      <View style={styles.col}>
+        <Button title="UI Kit Gallery" variant="secondary" onPress={() => router.push('/gallery')} />
+        <Button title="Database Debug" variant="secondary" onPress={() => router.push('/db-debug')} />
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 8 },
-  title: { fontSize: 24, fontWeight: '700' },
-  subtitle: { fontSize: 14, color: '#666' },
-  link: { marginTop: 16, paddingVertical: 10, paddingHorizontal: 16, backgroundColor: '#1E6FB8', borderRadius: 10 },
-  linkText: { color: '#fff', fontWeight: '600' },
+  gap: { height: 14 },
+  col: { gap: 10 },
 });
