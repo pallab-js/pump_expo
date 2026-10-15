@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import type { Profile, Role, Station } from '@/db/types';
-import { generateSalt, hashPin, verifyPin } from '@/services/crypto';
+import { generateSalt, hashPin, verifyPin, isLegacyHash } from '@/services/crypto';
 
 export interface CreateProfileInput {
   name: string;
@@ -67,15 +67,94 @@ export async function deleteProfile(db: SQLiteDatabase, id: number): Promise<voi
   await db.runAsync('DELETE FROM profile WHERE id = ?', [id]);
 }
 
-/** Verify a PIN for a profile. Returns true on match. */
+/** Brute-force policy. */
+export const MAX_PIN_ATTEMPTS = 5;
+export const LOCKOUT_BASE_SECONDS = 30; // escalates with each lockout tier
+
+export interface PinCheckResult {
+  ok: boolean;
+  locked: boolean;
+  /** Seconds remaining on lockout (when locked). */
+  retryAfter: number;
+  /** Attempts remaining before the next lockout (when not locked and wrong). */
+  attemptsLeft: number;
+}
+
+/** Seconds of lockout for a given cumulative failed-attempt count. */
+export function lockoutSeconds(failedAttempts: number): number {
+  const tier = Math.floor(failedAttempts / MAX_PIN_ATTEMPTS); // 1,2,3...
+  if (tier <= 0) return 0;
+  // 30s, 60s, 120s, 240s ... capped at 15 min.
+  return Math.min(LOCKOUT_BASE_SECONDS * 2 ** (tier - 1), 15 * 60);
+}
+
+/**
+ * Verify a PIN with brute-force protection.
+ * - Enforces a lockout window after repeated failures (escalating backoff).
+ * - On success, resets the counter and transparently re-hashes legacy (v1)
+ *   PINs to the current KDF.
+ * `now` is injectable for testing.
+ */
 export async function checkProfilePin(
   db: SQLiteDatabase,
   id: number,
-  pin: string
-): Promise<boolean> {
+  pin: string,
+  now: Date = new Date()
+): Promise<PinCheckResult> {
   const p = await getProfile(db, id);
-  if (!p) return false;
-  return verifyPin(pin, p.pin_salt, p.pin_hash);
+  if (!p) return { ok: false, locked: false, retryAfter: 0, attemptsLeft: MAX_PIN_ATTEMPTS };
+
+  // Honor an active lockout.
+  if (p.locked_until) {
+    const until = new Date(p.locked_until).getTime();
+    if (until > now.getTime()) {
+      return {
+        ok: false,
+        locked: true,
+        retryAfter: Math.ceil((until - now.getTime()) / 1000),
+        attemptsLeft: 0,
+      };
+    }
+  }
+
+  const ok = await verifyPin(pin, p.pin_salt, p.pin_hash);
+
+  if (ok) {
+    // Reset counters; migrate legacy hash to the current KDF.
+    if (isLegacyHash(p.pin_hash)) {
+      const salt = await generateSalt();
+      const pin_hash = await hashPin(pin, salt);
+      await db.runAsync(
+        'UPDATE profile SET pin_hash = ?, pin_salt = ?, failed_attempts = 0, locked_until = NULL WHERE id = ?',
+        [pin_hash, salt, id]
+      );
+    } else {
+      await db.runAsync(
+        'UPDATE profile SET failed_attempts = 0, locked_until = NULL WHERE id = ?',
+        [id]
+      );
+    }
+    return { ok: true, locked: false, retryAfter: 0, attemptsLeft: MAX_PIN_ATTEMPTS };
+  }
+
+  // Wrong PIN: increment, and lock if a new tier boundary is reached.
+  const failed = (p.failed_attempts ?? 0) + 1;
+  const lockSecs = failed % MAX_PIN_ATTEMPTS === 0 ? lockoutSeconds(failed) : 0;
+  const lockedUntil =
+    lockSecs > 0 ? new Date(now.getTime() + lockSecs * 1000).toISOString() : p.locked_until ?? null;
+
+  await db.runAsync('UPDATE profile SET failed_attempts = ?, locked_until = ? WHERE id = ?', [
+    failed,
+    lockedUntil,
+    id,
+  ]);
+
+  return {
+    ok: false,
+    locked: lockSecs > 0,
+    retryAfter: lockSecs,
+    attemptsLeft: lockSecs > 0 ? 0 : MAX_PIN_ATTEMPTS - (failed % MAX_PIN_ATTEMPTS),
+  };
 }
 
 /** Replace the set of stations assigned to a (staff) profile. */

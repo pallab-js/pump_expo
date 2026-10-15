@@ -1,7 +1,7 @@
 import { createInMemoryDatabase } from '@/db';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { createStation, listFuelTypes, createNozzle, createTank, listStations } from '@/repositories/stationRepo';
-import { createProfile, listProfiles } from '@/repositories/profileRepo';
+import { createProfile, listProfiles, checkProfilePin } from '@/repositories/profileRepo';
 import { ensureDayRecord, saveMeterReading, savePayments, addExpense, listMeterReadings } from '@/repositories/entryRepo';
 import { exportBackup, exportBackupJson, restoreBackup, restoreBackupJson } from '@/services/backup';
 
@@ -61,15 +61,57 @@ describe('backup/restore', () => {
     expect(readings[0].closing).toBe(500);
   });
 
-  it('preserves hashed PIN across restore (login still works)', async () => {
+  it('strips PIN credentials from the exported backup', async () => {
+    const db = await createInMemoryDatabase();
+    await seed(db);
+    const backup = await exportBackup(db);
+    const profileRows = backup.data.profile;
+    expect(profileRows.length).toBeGreaterThan(0);
+    for (const row of profileRows) {
+      expect(row.pin_hash).toBeUndefined();
+      expect(row.pin_salt).toBeUndefined();
+      expect(row.locked_until).toBeUndefined();
+      expect(row.failed_attempts).toBeUndefined();
+    }
+    // Ensure the raw JSON contains no credential material either.
+    const json = await exportBackupJson(db);
+    expect(json).not.toContain('pin_hash');
+    expect(json).not.toContain('pin_salt');
+  });
+
+  it('restores profiles with a reset-required placeholder (no usable PIN)', async () => {
     const db = await createInMemoryDatabase();
     await seed(db);
     const json = await exportBackupJson(db);
     await restoreBackupJson(db, json);
     const profiles = await listProfiles(db);
     const owner = profiles[0];
-    expect(owner.pin_hash).toBeTruthy();
-    expect(owner.pin_salt).toBeTruthy();
+    expect(owner.pin_hash).toBe('RESET_REQUIRED');
+    // The original PIN must no longer verify after restore.
+    expect((await checkProfilePin(db, owner.id, '1234')).ok).toBe(false);
+  });
+
+  it('sanitizes an invalid role on restore to a safe default', async () => {
+    const db = await createInMemoryDatabase();
+    await seed(db);
+    const backup = await exportBackup(db);
+    // Tamper: set an illegal role.
+    (backup.data.profile[0] as Record<string, unknown>).role = 'superadmin';
+    await restoreBackup(db, backup);
+    const profiles = await listProfiles(db);
+    expect(['owner', 'staff']).toContain(profiles[0].role);
+  });
+
+  it('coerces non-finite numeric values on restore', async () => {
+    const db = await createInMemoryDatabase();
+    await seed(db);
+    const backup = await exportBackup(db);
+    if (backup.data.expense.length) {
+      (backup.data.expense[0] as Record<string, unknown>).amount = 'NaN-ish';
+    }
+    await restoreBackup(db, backup);
+    const rows = await db.getAllAsync<{ amount: number }>('SELECT amount FROM expense');
+    rows.forEach((r) => expect(Number.isFinite(r.amount)).toBe(true));
   });
 
   it('rejects an invalid backup file', async () => {

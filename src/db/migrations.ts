@@ -165,6 +165,24 @@ export const migrations: Migration[] = [
       }
     },
   },
+  {
+    version: 2,
+    name: 'pin_bruteforce_tracking',
+    up: async (db) => {
+      // Track failed PIN attempts and a lockout window per profile.
+      // ALTER TABLE ADD COLUMN is not idempotent, so guard on existing columns.
+      const cols = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(profile)`);
+      const names = new Set(cols.map((c) => c.name));
+      if (!names.has('failed_attempts')) {
+        await db.execAsync(
+          `ALTER TABLE profile ADD COLUMN failed_attempts INTEGER NOT NULL DEFAULT 0;`
+        );
+      }
+      if (!names.has('locked_until')) {
+        await db.execAsync(`ALTER TABLE profile ADD COLUMN locked_until TEXT;`);
+      }
+    },
+  },
 ];
 
 export const LATEST_VERSION = migrations[migrations.length - 1]?.version ?? 0;

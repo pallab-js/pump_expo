@@ -9,6 +9,8 @@ export interface Profile {
   pin_hash: string;
   pin_salt: string;
   created_at: string;
+  failed_attempts: number;
+  locked_until: string | null;
 }
 
 export interface ProfileStation {

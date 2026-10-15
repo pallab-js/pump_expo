@@ -32,6 +32,7 @@ Full planning and design docs live in [`docs/`](docs/):
 - [Technical Requirements (TRD)](docs/TRD.md)
 - [Database Schema](docs/SCHEMA.md)
 - [App Flow](docs/APP_FLOW.md)
+- [Security Model](docs/SECURITY.md)
 
 ## Getting Started
 

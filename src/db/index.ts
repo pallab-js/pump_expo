@@ -7,11 +7,27 @@ export const DB_NAME = 'fuelpump.db';
 let dbInstance: SQLiteDatabase | null = null;
 let initPromise: Promise<SQLiteDatabase> | null = null;
 
+// Serialize migration runs per database connection so concurrent callers on
+// the same connection never apply a (non-idempotent) migration twice.
+const migrationLocks = new WeakMap<SQLiteDatabase, Promise<void>>();
+
 /**
  * Run the schema_version-tracked migrations against a database.
- * Safe to call repeatedly: already-applied versions are skipped.
+ * Safe to call repeatedly and concurrently: already-applied versions are
+ * skipped, and concurrent calls on the same connection are serialized.
  */
 export async function runMigrations(db: SQLiteDatabase): Promise<void> {
+  const inFlight = migrationLocks.get(db);
+  if (inFlight) {
+    await inFlight;
+    return;
+  }
+  const run = runMigrationsUnlocked(db).finally(() => migrationLocks.delete(db));
+  migrationLocks.set(db, run);
+  await run;
+}
+
+async function runMigrationsUnlocked(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('PRAGMA journal_mode = WAL;');
   await db.execAsync('PRAGMA foreign_keys = ON;');
   await db.execAsync(`

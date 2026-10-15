@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { AppState } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -6,11 +7,23 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { getDatabase } from '@/db';
 import { useTheme } from '@/theme/useTheme';
 import { AuthGate } from '@/components/AuthGate';
+import { useSessionStore } from '@/stores/sessionStore';
 
 export default function RootLayout() {
   useEffect(() => {
     // Initialize the local database (runs migrations on first launch).
     getDatabase().catch((e) => console.warn('DB init failed:', e));
+  }, []);
+
+  useEffect(() => {
+    // Auto-lock the session when the app is backgrounded, so a shared counter
+    // device re-prompts for a PIN on resume.
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'background' || state === 'inactive') {
+        useSessionStore.getState().lock();
+      }
+    });
+    return () => sub.remove();
   }, []);
 
   const t = useTheme();

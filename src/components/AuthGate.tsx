@@ -73,11 +73,14 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     setError(null);
     try {
       const db = await getDatabase();
-      const ok = await checkProfilePin(db, selected.id, pin);
-      if (ok) {
+      const res = await checkProfilePin(db, selected.id, pin);
+      if (res.ok) {
         unlock(selected);
+      } else if (res.locked) {
+        setError(`Too many attempts. Try again in ${res.retryAfter}s.`);
+        setPin('');
       } else {
-        setError('Incorrect PIN.');
+        setError(`Incorrect PIN. ${res.attemptsLeft} attempt(s) left.`);
         setPin('');
       }
     } finally {
@@ -107,7 +110,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           <Input label="Your name" value={name} onChangeText={setName} placeholder="e.g. Owner" />
           <View style={styles.gap} />
           <Input
-            label="Set PIN (4+ digits)"
+            label="Set PIN (6 digits recommended)"
             value={pin}
             onChangeText={(v) => setPin(v.replace(/[^0-9]/g, ''))}
             keyboardType="number-pad"
