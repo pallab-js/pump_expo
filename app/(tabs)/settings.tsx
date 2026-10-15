@@ -7,6 +7,7 @@ import { useSessionStore } from '@/stores/sessionStore';
 import { useTheme } from '@/theme/useTheme';
 import { getDatabase, _resetDatabaseCache } from '@/db';
 import { shareBackup, pickAndRestoreBackup } from '@/services/backupIO';
+import { seedDemoData, hasAnyStations } from '@/services/seed';
 
 export default function SettingsScreen() {
   const t = useTheme();
@@ -16,7 +17,7 @@ export default function SettingsScreen() {
   const lock = useSessionStore((s) => s.lock);
   const isOwner = profile?.role === 'owner';
 
-  const [busy, setBusy] = useState<null | 'export' | 'import'>(null);
+  const [busy, setBusy] = useState<null | 'export' | 'import' | 'seed'>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
   const onExport = async () => {
@@ -31,6 +32,39 @@ export default function SettingsScreen() {
     } finally {
       setBusy(null);
     }
+  };
+
+  const runSeed = async () => {
+    setBusy('seed');
+    setMsg(null);
+    try {
+      const db = await getDatabase();
+      const res = await seedDemoData(db);
+      setMsg(`Loaded demo data: ${res.stations} stations × ${res.days} days.`);
+    } catch (e) {
+      Alert.alert('Seeding failed', e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const onSeed = () => {
+    setMsg(null);
+    (async () => {
+      const db = await getDatabase();
+      if (await hasAnyStations(db)) {
+        Alert.alert(
+          'Add demo data?',
+          'Stations already exist. Demo data will be ADDED alongside your current data (it will not replace it). Continue?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Add demo data', onPress: runSeed },
+          ]
+        );
+      } else {
+        runSeed();
+      }
+    })();
   };
 
   const onImport = () => {
@@ -119,6 +153,7 @@ export default function SettingsScreen() {
           <View style={styles.gap} />
           <Text style={[styles.devTitle, { color: t.colors.textMuted }]}>Developer</Text>
           <View style={styles.col}>
+            <Button title="Load demo data" variant="secondary" onPress={onSeed} loading={busy === 'seed'} />
             <Button title="UI Kit Gallery" variant="ghost" onPress={() => router.push('/gallery')} />
             <Button title="Database Debug" variant="ghost" onPress={() => router.push('/db-debug')} />
             <Button title="KPI Debug" variant="ghost" onPress={() => router.push('/kpi-debug')} />
