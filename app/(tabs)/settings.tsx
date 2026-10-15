@@ -46,6 +46,7 @@ export default function SettingsScreen() {
         ) : null}
         <Button title="UI Kit Gallery" variant="secondary" onPress={() => router.push('/gallery')} />
         <Button title="Database Debug" variant="secondary" onPress={() => router.push('/db-debug')} />
+        <Button title="KPI Debug" variant="secondary" onPress={() => router.push('/kpi-debug')} />
       </View>
     </Screen>
   );

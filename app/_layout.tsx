@@ -27,6 +27,7 @@ export default function RootLayout() {
             <Stack.Screen name="profiles" options={{ headerShown: true, title: 'Profiles' }} />
             <Stack.Screen name="station/[id]" options={{ headerShown: true, title: 'Station' }} />
             <Stack.Screen name="prices/[id]" options={{ headerShown: true, title: 'Fuel Prices' }} />
+            <Stack.Screen name="kpi-debug" options={{ headerShown: true, title: 'KPI Debug' }} />
           </Stack>
         </AuthGate>
       </SafeAreaProvider>
