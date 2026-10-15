@@ -7,3 +7,4 @@ export { Header } from './Header';
 export { EmptyState } from './EmptyState';
 export { Screen } from './Screen';
 export { Badge } from './Badge';
+export { DayExtras } from './DayExtras';

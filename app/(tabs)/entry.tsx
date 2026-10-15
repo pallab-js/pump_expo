@@ -15,6 +15,7 @@ import {
 import { useSessionStore } from '@/stores/sessionStore';
 import { useTheme } from '@/theme/useTheme';
 import { Screen, Header, Card, Button, Input, Select, Badge, EmptyState } from '@/components';
+import { DayExtras } from '@/components/DayExtras';
 import { todayISO, formatDisplay, daysAgoISO } from '@/services/dates';
 
 interface NozzleRow {
@@ -34,6 +35,7 @@ export default function EntryScreen() {
   const [date, setDate] = useState(todayISO());
   const [fuelTypes, setFuelTypes] = useState<FuelType[]>([]);
   const [rows, setRows] = useState<NozzleRow[]>([]);
+  const [dayRecordId, setDayRecordId] = useState<number | null>(null);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +62,7 @@ export default function EntryScreen() {
     const nozzles = await listNozzles(db, stationId);
     const prices = await getEffectivePrices(db, stationId, date);
     const dr = await ensureDayRecord(db, stationId, date);
+    setDayRecordId(dr);
     const existing = await listMeterReadings(db, dr);
     const byNozzle: Record<number, MeterReading> = {};
     for (const r of existing) byNozzle[r.nozzle_id] = r;
@@ -207,6 +210,10 @@ export default function EntryScreen() {
               {savedMsg ? <Text style={[styles.saved, { color: t.colors.success }]}>{savedMsg}</Text> : null}
               {error ? <Text style={[styles.err, { color: t.colors.danger }]}>{error}</Text> : null}
             </>
+          ) : null}
+
+          {dayRecordId !== null && stationId !== null ? (
+            <DayExtras dayRecordId={dayRecordId} stationId={stationId} />
           ) : null}
         </>
       )}

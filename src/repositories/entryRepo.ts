@@ -1,5 +1,16 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
-import type { DayRecord, MeterReading } from '@/db/types';
+import type {
+  DayRecord,
+  MeterReading,
+  Payment,
+  Expense,
+  StockMovement,
+  Shift,
+  Staff,
+  PaymentMethod,
+  StockMovementType,
+  ShiftName,
+} from '@/db/types';
 
 /* ------------------------------ Day records ------------------------------ */
 
@@ -147,4 +158,219 @@ export async function computeDaySales(
     summary.perFuel[r.fuel_type_id] = bucket;
   }
   return summary;
+}
+
+/* ----------------------------- Payments ---------------------------------- */
+
+export const PAYMENT_METHODS: PaymentMethod[] = ['cash', 'card', 'upi', 'credit'];
+
+export async function listPayments(db: SQLiteDatabase, dayRecordId: number): Promise<Payment[]> {
+  return db.getAllAsync<Payment>('SELECT * FROM payment WHERE day_record_id = ? ORDER BY id', [
+    dayRecordId,
+  ]);
+}
+
+/** Replace all payments for a day with the provided method→amount map (non-zero only). */
+export async function savePayments(
+  db: SQLiteDatabase,
+  dayRecordId: number,
+  amounts: Partial<Record<PaymentMethod, number>>
+): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('DELETE FROM payment WHERE day_record_id = ?', [dayRecordId]);
+    for (const method of PAYMENT_METHODS) {
+      const amount = amounts[method];
+      if (amount && amount > 0) {
+        await db.runAsync('INSERT INTO payment (day_record_id, method, amount) VALUES (?, ?, ?)', [
+          dayRecordId,
+          method,
+          amount,
+        ]);
+      }
+    }
+  });
+}
+
+export async function paymentsTotal(db: SQLiteDatabase, dayRecordId: number): Promise<number> {
+  const row = await db.getFirstAsync<{ s: number | null }>(
+    'SELECT SUM(amount) AS s FROM payment WHERE day_record_id = ?',
+    [dayRecordId]
+  );
+  return row?.s ?? 0;
+}
+
+/* ----------------------------- Expenses ---------------------------------- */
+
+export interface ExpenseInput {
+  category: string;
+  amount: number;
+  note?: string | null;
+}
+
+export async function listExpenses(db: SQLiteDatabase, dayRecordId: number): Promise<Expense[]> {
+  return db.getAllAsync<Expense>('SELECT * FROM expense WHERE day_record_id = ? ORDER BY id', [
+    dayRecordId,
+  ]);
+}
+
+export async function addExpense(
+  db: SQLiteDatabase,
+  dayRecordId: number,
+  input: ExpenseInput
+): Promise<number> {
+  if (!input.category?.trim()) throw new Error('Expense category is required.');
+  if (input.amount < 0) throw new Error('Amount must be non-negative.');
+  const res = await db.runAsync(
+    'INSERT INTO expense (day_record_id, category, amount, note) VALUES (?, ?, ?, ?)',
+    [dayRecordId, input.category.trim(), input.amount, input.note ?? null]
+  );
+  return res.lastInsertRowId;
+}
+
+export async function deleteExpense(db: SQLiteDatabase, id: number): Promise<void> {
+  await db.runAsync('DELETE FROM expense WHERE id = ?', [id]);
+}
+
+export async function expensesTotal(db: SQLiteDatabase, dayRecordId: number): Promise<number> {
+  const row = await db.getFirstAsync<{ s: number | null }>(
+    'SELECT SUM(amount) AS s FROM expense WHERE day_record_id = ?',
+    [dayRecordId]
+  );
+  return row?.s ?? 0;
+}
+
+/* -------------------------- Stock movements ------------------------------ */
+
+export interface StockMovementInput {
+  tank_id: number;
+  type: StockMovementType;
+  quantity: number;
+  note?: string | null;
+}
+
+export async function listStockMovements(
+  db: SQLiteDatabase,
+  dayRecordId: number
+): Promise<StockMovement[]> {
+  return db.getAllAsync<StockMovement>(
+    'SELECT * FROM stock_movement WHERE day_record_id = ? ORDER BY id',
+    [dayRecordId]
+  );
+}
+
+export async function addStockMovement(
+  db: SQLiteDatabase,
+  dayRecordId: number,
+  input: StockMovementInput
+): Promise<number> {
+  if (input.quantity < 0) throw new Error('Quantity must be non-negative.');
+  const res = await db.runAsync(
+    'INSERT INTO stock_movement (day_record_id, tank_id, type, quantity, note) VALUES (?, ?, ?, ?, ?)',
+    [dayRecordId, input.tank_id, input.type, input.quantity, input.note ?? null]
+  );
+  return res.lastInsertRowId;
+}
+
+export async function deleteStockMovement(db: SQLiteDatabase, id: number): Promise<void> {
+  await db.runAsync('DELETE FROM stock_movement WHERE id = ?', [id]);
+}
+
+/**
+ * Running stock balance from a list of movements for a tank:
+ *   opening/receipt/adjustment add to the balance; a recorded `closing`
+ *   physical count overrides the running balance.
+ */
+export function stockBalance(movements: StockMovement[]): number {
+  let balance = 0;
+  for (const m of movements) {
+    if (m.type === 'opening' || m.type === 'receipt' || m.type === 'adjustment') {
+      balance += m.quantity;
+    } else if (m.type === 'closing') {
+      balance = m.quantity;
+    }
+  }
+  return balance;
+}
+
+/* -------------------------------- Shifts --------------------------------- */
+
+export interface ShiftInput {
+  staff_id?: number | null;
+  shift: ShiftName;
+  note?: string | null;
+}
+
+export async function listShifts(db: SQLiteDatabase, dayRecordId: number): Promise<Shift[]> {
+  return db.getAllAsync<Shift>('SELECT * FROM shift WHERE day_record_id = ? ORDER BY id', [
+    dayRecordId,
+  ]);
+}
+
+export async function addShift(
+  db: SQLiteDatabase,
+  dayRecordId: number,
+  input: ShiftInput
+): Promise<number> {
+  const res = await db.runAsync(
+    'INSERT INTO shift (day_record_id, staff_id, shift, note) VALUES (?, ?, ?, ?)',
+    [dayRecordId, input.staff_id ?? null, input.shift, input.note ?? null]
+  );
+  return res.lastInsertRowId;
+}
+
+export async function deleteShift(db: SQLiteDatabase, id: number): Promise<void> {
+  await db.runAsync('DELETE FROM shift WHERE id = ?', [id]);
+}
+
+/* --------------------------------- Staff --------------------------------- */
+
+export async function listStaff(db: SQLiteDatabase, stationId: number): Promise<Staff[]> {
+  return db.getAllAsync<Staff>(
+    'SELECT * FROM staff WHERE station_id = ? AND active = 1 ORDER BY name',
+    [stationId]
+  );
+}
+
+export async function addStaff(
+  db: SQLiteDatabase,
+  stationId: number,
+  name: string,
+  phone?: string | null
+): Promise<number> {
+  if (!name?.trim()) throw new Error('Staff name is required.');
+  const res = await db.runAsync('INSERT INTO staff (station_id, name, phone) VALUES (?, ?, ?)', [
+    stationId,
+    name.trim(),
+    phone ?? null,
+  ]);
+  return res.lastInsertRowId;
+}
+
+export async function deleteStaff(db: SQLiteDatabase, id: number): Promise<void> {
+  await db.runAsync('DELETE FROM staff WHERE id = ?', [id]);
+}
+
+/* ---------------------------- Day reconciliation ------------------------- */
+
+export interface DayReconciliation {
+  salesAmount: number;
+  paymentsTotal: number;
+  expensesTotal: number;
+  /** payments - sales (0 means fully reconciled). */
+  variance: number;
+}
+
+export async function reconcileDay(
+  db: SQLiteDatabase,
+  dayRecordId: number
+): Promise<DayReconciliation> {
+  const sales = await computeDaySales(db, dayRecordId);
+  const payments = await paymentsTotal(db, dayRecordId);
+  const expenses = await expensesTotal(db, dayRecordId);
+  return {
+    salesAmount: sales.totalAmount,
+    paymentsTotal: payments,
+    expensesTotal: expenses,
+    variance: payments - sales.totalAmount,
+  };
 }
