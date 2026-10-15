@@ -27,7 +27,7 @@ src/
   stores/                 # session, theme, filter (Zustand)
   components/             # UI kit + AuthGate + DayExtras
   theme/                  # tokens + useTheme
-__mocks__/                # expo-sqlite (better-sqlite3), expo-crypto (node:crypto)
+__mocks__/                # expo-sqlite (sql.js WASM), expo-crypto (node:crypto)
 ```
 
 ## Persistence & migrations
@@ -46,7 +46,7 @@ __mocks__/                # expo-sqlite (better-sqlite3), expo-crypto (node:cryp
 
 ## Testing
 - **Framework:** Jest (`jest-expo` preset) + `@testing-library/react-native` (v12.9).
-- **Database tests** run **real SQL** via a `better-sqlite3`-backed `expo-sqlite` mock, so
+- **Database tests** run **real SQL** via a `sql.js` (WASM) backed `expo-sqlite` mock, so
   repositories and services are genuinely exercised.
 - Coverage includes migrations, profile/role scoping, station CRUD + cascades, price
   resolution, entry math, payments/expenses/stock/shifts, aggregation across stations/days,
@@ -61,8 +61,8 @@ __mocks__/                # expo-sqlite (better-sqlite3), expo-crypto (node:cryp
 - **GitHub Actions** (`.github/workflows/ci.yml`) runs on every push/PR to `main`:
   `npm ci` → `npm run typecheck` → `npm test -- --ci --coverage` → `expo export --platform ios`.
 - A root `.npmrc` sets `legacy-peer-deps=true` so `npm ci` resolves the dependency tree the
-  same way locally and in CI. `better-sqlite3` (test engine) builds natively on
-  `ubuntu-latest`.
+  same way locally and in CI. The database test engine is **sql.js** (SQLite compiled to
+  WebAssembly), so there is no native build step and no cross-platform binary risk.
 
 ## Known constraints
 - Peer-dependency alignment requires `--legacy-peer-deps` for a few JS-only packages;

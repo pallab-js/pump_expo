@@ -1,30 +1,53 @@
 /**
- * Test mock for `expo-sqlite` backed by better-sqlite3.
+ * Test mock for `expo-sqlite` backed by sql.js (SQLite compiled to WebAssembly).
  *
- * Implements the subset of the async API used by the app:
+ * Why sql.js and not a native engine: native SQLite addons (e.g. better-sqlite3)
+ * segfault under some CI Node/glibc combinations. sql.js is pure WASM — identical
+ * behavior on every machine and CI runner, with no native build step.
+ *
+ * Implements the subset of the async API the app uses:
  *   openDatabaseAsync, execAsync, runAsync, getAllAsync, getFirstAsync,
  *   withTransactionAsync, prepareAsync (+ statement.executeAsync), closeAsync.
  *
- * This runs real SQL in-process so migrations and repositories are genuinely
- * exercised in unit tests (no hand-rolled SQL fake).
+ * NOTE: sql.js initialization is async, so this module exposes async open
+ * functions; `openDatabaseSync` throws (unused by the app at test time).
  */
-const Database = require('better-sqlite3');
+const path = require('path');
+const initSqlJs = require('sql.js');
+
+let sqlModulePromise = null;
+function getSqlModule() {
+  if (!sqlModulePromise) {
+    sqlModulePromise = initSqlJs({
+      locateFile: (file) => path.join(__dirname, '..', 'node_modules', 'sql.js', 'dist', file),
+    });
+  }
+  return sqlModulePromise;
+}
 
 function normalizeParams(params) {
   if (params === undefined || params === null) return [];
   return Array.isArray(params) ? params : [params];
 }
 
+function isSelect(sql) {
+  return /^\s*(SELECT|PRAGMA|WITH)\b/i.test(sql);
+}
+
 class SQLiteStatement {
-  constructor(db, source) {
-    this._stmt = db.prepare(source);
+  constructor(rawDb, source) {
+    this._rawDb = rawDb;
+    this._source = source;
   }
 
   async executeAsync(params) {
     const p = normalizeParams(params);
-    const isSelect = this._stmt.reader;
-    if (isSelect) {
-      const rows = this._stmt.all(...p);
+    if (isSelect(this._source)) {
+      const stmt = this._rawDb.prepare(this._source);
+      if (p.length) stmt.bind(p);
+      const rows = [];
+      while (stmt.step()) rows.push(stmt.getAsObject());
+      stmt.free();
       return {
         getAllAsync: async () => rows,
         getFirstAsync: async () => (rows.length ? rows[0] : null),
@@ -33,44 +56,59 @@ class SQLiteStatement {
         },
       };
     }
-    const info = this._stmt.run(...p);
+    this._rawDb.run(this._source, p);
     return {
-      lastInsertRowId: Number(info.lastInsertRowid),
-      changes: info.changes,
+      lastInsertRowId: lastInsertRowId(this._rawDb),
+      changes: this._rawDb.getRowsModified(),
       getAllAsync: async () => [],
       getFirstAsync: async () => null,
     };
   }
 
   async finalizeAsync() {
-    /* better-sqlite3 statements are GC-managed; nothing to finalize. */
+    /* statements are freed immediately after execution above */
   }
 }
 
+function lastInsertRowId(rawDb) {
+  const res = rawDb.exec('SELECT last_insert_rowid() AS id');
+  return res.length ? Number(res[0].values[0][0]) : 0;
+}
+
+function selectAll(rawDb, sql, params) {
+  const stmt = rawDb.prepare(sql);
+  const p = normalizeParams(params);
+  if (p.length) stmt.bind(p);
+  const rows = [];
+  while (stmt.step()) rows.push(stmt.getAsObject());
+  stmt.free();
+  return rows;
+}
+
 class SQLiteDatabase {
-  constructor(name) {
-    this._db = new Database(name === ':memory:' ? ':memory:' : name);
+  constructor(rawDb) {
+    this._db = rawDb;
   }
 
   async execAsync(sql) {
-    this._db.exec(sql);
+    this._db.run(sql);
   }
 
   async runAsync(sql, params) {
-    const info = this._db.prepare(sql).run(...normalizeParams(params));
+    this._db.run(sql, normalizeParams(params));
     return {
-      lastInsertRowId: Number(info.lastInsertRowid),
-      changes: info.changes,
+      lastInsertRowId: lastInsertRowId(this._db),
+      changes: this._db.getRowsModified(),
     };
   }
 
   async getAllAsync(sql, params) {
-    return this._db.prepare(sql).all(...normalizeParams(params));
+    return selectAll(this._db, sql, params);
   }
 
   async getFirstAsync(sql, params) {
-    const row = this._db.prepare(sql).get(...normalizeParams(params));
-    return row === undefined ? null : row;
+    const rows = selectAll(this._db, sql, params);
+    return rows.length ? rows[0] : null;
   }
 
   async prepareAsync(sql) {
@@ -78,12 +116,12 @@ class SQLiteDatabase {
   }
 
   async withTransactionAsync(task) {
-    this._db.exec('BEGIN');
+    this._db.run('BEGIN');
     try {
       await task();
-      this._db.exec('COMMIT');
+      this._db.run('COMMIT');
     } catch (e) {
-      this._db.exec('ROLLBACK');
+      this._db.run('ROLLBACK');
       throw e;
     }
   }
@@ -93,12 +131,14 @@ class SQLiteDatabase {
   }
 }
 
-async function openDatabaseAsync(name) {
-  return new SQLiteDatabase(name);
+async function openDatabaseAsync(_name) {
+  const SQL = await getSqlModule();
+  // Every open gets its own in-memory database (tests pass ':memory:').
+  return new SQLiteDatabase(new SQL.Database());
 }
 
-function openDatabaseSync(name) {
-  return new SQLiteDatabase(name);
+function openDatabaseSync() {
+  throw new Error('openDatabaseSync is not supported in the sql.js test mock; use openDatabaseAsync.');
 }
 
 module.exports = {

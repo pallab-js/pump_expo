@@ -28,9 +28,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build native test dependency (better-sqlite3)
-        run: npm rebuild better-sqlite3
-
       - name: Typecheck
         run: npm run typecheck
 

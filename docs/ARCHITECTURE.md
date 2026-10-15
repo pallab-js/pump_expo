@@ -80,7 +80,7 @@ graph LR
 - **Repository pattern.** Each entity group has a repository module; services compose
   repositories for aggregation. This keeps SQL in one layer and makes it unit-testable.
 - **Injectable database.** `createInMemoryDatabase()` lets the entire data + service layer
-  be unit-tested with real SQL (via a better-sqlite3-backed `expo-sqlite` mock).
+  be unit-tested with real SQL (via a sql.js (WASM) backed `expo-sqlite` mock).
 - **Derived analytics.** The dashboard/report numbers are computed on demand from base
   tables (meter readings, payments, expenses, stock movements) — no denormalized caches to
   keep in sync.
