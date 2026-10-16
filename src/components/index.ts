@@ -7,4 +7,5 @@ export { Header } from './Header';
 export { EmptyState } from './EmptyState';
 export { Screen } from './Screen';
 export { Badge } from './Badge';
+export { Spacer } from './Spacer';
 export { DayExtras } from './DayExtras';

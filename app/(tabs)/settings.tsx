@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Screen, Header, Card, Button, Select, Badge } from '@/components';
+import { Screen, Header, Card, Button, Select, Badge, Spacer } from '@/components';
 import { useThemeStore, type ThemePreference } from '@/stores/themeStore';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useTheme } from '@/theme/useTheme';
@@ -153,7 +153,7 @@ export default function SettingsScreen() {
         <Button title="Lock" variant="secondary" onPress={lock} />
       </Card>
 
-      <View style={styles.gap} />
+      <Spacer />
       <Card>
         <Select<ThemePreference>
           label="Appearance"
@@ -169,7 +169,7 @@ export default function SettingsScreen() {
 
       {bioAvailable ? (
         <>
-          <View style={styles.gap} />
+          <Spacer />
           <Card style={styles.sessionCard}>
             <View style={styles.flex}>
               <Text style={[styles.cardTitle, { color: t.colors.text }]}>{bioLabel} unlock</Text>
@@ -190,14 +190,14 @@ export default function SettingsScreen() {
 
       {isOwner ? (
         <>
-          <View style={styles.gap} />
+          <Spacer />
           <Card>
             <Text style={[styles.cardTitle, { color: t.colors.text }]}>Data backup</Text>
             <Text style={[styles.muted, { color: t.colors.textMuted }]}>
               All data is stored only on this device. Export a JSON backup to Files/iCloud and
               restore it later or on another device.
             </Text>
-            <View style={styles.gap} />
+            <Spacer />
             <View style={styles.col}>
               <Button title="Export backup" onPress={onExport} loading={busy === 'export'} />
               <Button title="Restore from backup" variant="secondary" onPress={onImport} loading={busy === 'import'} />
@@ -207,14 +207,14 @@ export default function SettingsScreen() {
         </>
       ) : null}
 
-      <View style={styles.gap} />
+      <Spacer />
       <View style={styles.col}>
         {isOwner ? <Button title="Manage Profiles" onPress={() => router.push('/profiles')} /> : null}
       </View>
 
       {isOwner ? (
         <>
-          <View style={styles.gap} />
+          <Spacer />
           <Text style={[styles.devTitle, { color: t.colors.textMuted }]}>Developer</Text>
           <View style={styles.col}>
             <Button title="Load demo data" variant="secondary" onPress={onSeed} loading={busy === 'seed'} />
@@ -232,7 +232,6 @@ const styles = StyleSheet.create({
   sessionCard: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   flex: { flex: 1, gap: 6 },
   name: { fontSize: 18, fontWeight: '700' },
-  gap: { height: 14 },
   col: { gap: 10 },
   cardTitle: { fontSize: 16, fontWeight: '700', marginBottom: 6 },
   muted: { fontSize: 13, lineHeight: 19 },
