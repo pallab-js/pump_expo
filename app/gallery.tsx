@@ -27,10 +27,10 @@ export default function GalleryScreen() {
       <View style={styles.gap} />
       <View style={styles.kpiRow}>
         <View style={styles.kpiCell}>
-          <KPIStat label="Revenue" value="₹1.24L" sublabel="▲ 8%" icon="💰" />
+          <KPIStat label="Revenue" value="₹1.24L" sublabel="▲ 8%" icon="cash-outline" />
         </View>
         <View style={styles.kpiCell}>
-          <KPIStat label="Litres" value="4,820" sublabel="Today" accent={t.colors.accent} icon="⛽" />
+          <KPIStat label="Litres" value="4,820" sublabel="Today" accent={t.colors.accent} icon="water-outline" />
         </View>
       </View>
 

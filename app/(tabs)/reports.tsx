@@ -33,6 +33,7 @@ export default function ReportsScreen() {
   const [payMix, setPayMix] = useState<PaymentMixSlice[]>([]);
   const [comparison, setComparison] = useState<StationComparisonRow[]>([]);
   const [fuelFilter, setFuelFilter] = useState<number | 'all'>('all');
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!profile) return;
@@ -50,6 +51,7 @@ export default function ReportsScreen() {
     setFuelMix(await getFuelMix(db, range, opts));
     setPayMix(await getPaymentMix(db, range, opts));
     setComparison(await getStationComparison(db, range, opts));
+    setLoading(false);
   }, [profile, start, end, stationFilter]);
 
   useFocusEffect(
@@ -66,9 +68,9 @@ export default function ReportsScreen() {
     </View>
   );
 
-  if (stations.length === 0) {
+  if (stations.length === 0 && !loading) {
     return (
-      <Screen>
+      <Screen onRefresh={load}>
         <Header title="Reports" subtitle="Filterable summaries" />
         <EmptyState icon="📈" title="No data" message="Add stations and record entries to see reports." />
       </Screen>
@@ -76,7 +78,7 @@ export default function ReportsScreen() {
   }
 
   return (
-    <Screen>
+    <Screen loading={loading} onRefresh={load}>
       <Header title="Reports" subtitle={`${formatDisplay(start)} → ${formatDisplay(end)}`} />
 
       <Select

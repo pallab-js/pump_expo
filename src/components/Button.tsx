@@ -10,6 +10,7 @@ interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
+  accessibilityLabel?: string;
 }
 
 export function Button({
@@ -19,6 +20,7 @@ export function Button({
   disabled,
   loading,
   style,
+  accessibilityLabel,
 }: ButtonProps) {
   const t = useTheme();
 
@@ -42,6 +44,7 @@ export function Button({
       onPress={onPress}
       disabled={isDisabled}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? title}
       accessibilityState={{ disabled: !!isDisabled, busy: !!loading }}
       style={({ pressed }) => [
         styles.base,

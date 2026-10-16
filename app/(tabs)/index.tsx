@@ -47,6 +47,7 @@ export default function DashboardScreen() {
   const [comparison, setComparison] = useState<StationComparisonRow[]>([]);
   const [stock, setStock] = useState<StockLevelRow[]>([]);
   const [hasStations, setHasStations] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!profile) return;
@@ -65,6 +66,7 @@ export default function DashboardScreen() {
     setPayMix(await getPaymentMix(db, range, opts));
     setComparison(await getStationComparison(db, range, opts));
     setStock(await getStockLevels(db, end, opts));
+    setLoading(false);
   }, [profile, start, end]);
 
   useFocusEffect(
@@ -83,9 +85,9 @@ export default function DashboardScreen() {
   const payPie = toPaymentPie(payMix, paymentPalette);
   const barData = toComparisonBars(comparison, paymentPalette);
 
-  if (!hasStations) {
+  if (!hasStations && !loading) {
     return (
-      <Screen>
+      <Screen onRefresh={load}>
         <Header title="Dashboard" subtitle="Central overview" />
         <EmptyState
           icon="⛽"
@@ -99,7 +101,7 @@ export default function DashboardScreen() {
   }
 
   return (
-    <Screen>
+    <Screen loading={loading} onRefresh={load}>
       <Header title="Dashboard" subtitle={profile?.role === 'owner' ? 'All outlets' : 'Your outlets'} />
 
       <Select
@@ -119,19 +121,19 @@ export default function DashboardScreen() {
       {/* KPI cards */}
       <View style={styles.kpiRow}>
         <View style={styles.kpiCell}>
-          <KPIStat label="Revenue" value={money(totals?.totalRevenue ?? 0)} sublabel={`${totals?.activeDays ?? 0} active days`} icon="💰" />
+          <KPIStat label="Revenue" value={money(totals?.totalRevenue ?? 0)} sublabel={`${totals?.activeDays ?? 0} active days`} icon="cash-outline" />
         </View>
         <View style={styles.kpiCell}>
-          <KPIStat label="Volume" value={litresFmt(totals?.totalLitres ?? 0)} accent={t.colors.accent} icon="⛽" />
+          <KPIStat label="Volume" value={litresFmt(totals?.totalLitres ?? 0)} accent={t.colors.accent} icon="water-outline" />
         </View>
       </View>
       <View style={styles.gap} />
       <View style={styles.kpiRow}>
         <View style={styles.kpiCell}>
-          <KPIStat label="Payments" value={money(totals?.totalPayments ?? 0)} icon="💳" />
+          <KPIStat label="Payments" value={money(totals?.totalPayments ?? 0)} icon="card-outline" />
         </View>
         <View style={styles.kpiCell}>
-          <KPIStat label="Expenses" value={money(totals?.totalExpenses ?? 0)} accent={t.colors.danger} icon="🧾" />
+          <KPIStat label="Expenses" value={money(totals?.totalExpenses ?? 0)} accent={t.colors.danger} icon="receipt-outline" />
         </View>
       </View>
 

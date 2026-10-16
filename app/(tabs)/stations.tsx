@@ -33,6 +33,7 @@ export default function StationsScreen() {
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!profile) return;
@@ -44,6 +45,7 @@ export default function StationsScreen() {
       withCounts.push({ ...s, tanks: c.tanks, nozzles: c.nozzles });
     }
     setRows(withCounts);
+    setLoading(false);
   }, [profile]);
 
   useFocusEffect(
@@ -111,7 +113,7 @@ export default function StationsScreen() {
   };
 
   return (
-    <Screen>
+    <Screen loading={loading} onRefresh={load}>
       <Header
         title="Stations"
         subtitle={isOwner ? 'All outlets' : 'Your assigned outlets'}

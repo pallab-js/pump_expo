@@ -173,10 +173,10 @@ export default function StationDetailScreen() {
         <Text style={[styles.section, { color: t.colors.text }]}>Last 30 days</Text>
         <View style={styles.kpiRow}>
           <View style={styles.flex}>
-            <KPIStat label="Revenue" value={money(totals?.totalRevenue ?? 0)} icon="💰" />
+            <KPIStat label="Revenue" value={money(totals?.totalRevenue ?? 0)} icon="cash-outline" />
           </View>
           <View style={styles.flex}>
-            <KPIStat label="Volume" value={litresFmt(totals?.totalLitres ?? 0)} accent={t.colors.accent} icon="⛽" />
+            <KPIStat label="Volume" value={litresFmt(totals?.totalLitres ?? 0)} accent={t.colors.accent} icon="water-outline" />
           </View>
         </View>
         {trend.length > 1 ? (

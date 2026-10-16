@@ -166,6 +166,7 @@ export default function EntryScreen() {
                 const tl = Number(r.test) || 0;
                 const litres = readingLitres({ opening: o, closing: c, test_litres: tl });
                 const amount = litres * r.price;
+                const invalid = r.closing !== '' && r.opening !== '' && c < o;
                 return (
                   <Card key={r.nozzle.id}>
                     <View style={styles.rowHead}>
@@ -184,10 +185,12 @@ export default function EntryScreen() {
                       </View>
                     </View>
                     <View style={styles.computed}>
-                      <Text style={[styles.muted, { color: t.colors.textMuted }]}>
-                        {litres.toFixed(2)} L
+                      <Text style={[styles.muted, { color: invalid ? t.colors.danger : t.colors.textMuted }]}>
+                        {invalid ? 'Closing < opening' : `${litres.toFixed(2)} L`}
                       </Text>
-                      <Text style={[styles.amount, { color: t.colors.accent }]}>₹{amount.toFixed(2)}</Text>
+                      <Text style={[styles.amount, { color: invalid ? t.colors.danger : t.colors.accent }]}>
+                        ₹{amount.toFixed(2)}
+                      </Text>
                     </View>
                   </Card>
                 );

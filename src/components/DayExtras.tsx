@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { getDatabase } from '@/db';
 import type { Tank, Staff, Expense, StockMovement, Shift, PaymentMethod, StockMovementType, ShiftName } from '@/db/types';
 import { listTanks } from '@/repositories/stationRepo';
@@ -144,6 +144,21 @@ export function DayExtras({
   const staffLabel = (id: number | null) =>
     id == null ? '—' : staff.find((s) => s.id === id)?.name ?? '?';
 
+  // Confirm before any inline delete, then run it and reload.
+  const confirmDelete = (what: string, run: () => Promise<void>) => {
+    Alert.alert('Delete', `Delete this ${what}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          await run();
+          await load();
+        },
+      },
+    ]);
+  };
+
   return (
     <View style={styles.wrap}>
       {/* Payments */}
@@ -181,11 +196,13 @@ export function DayExtras({
             <Button
               title="✕"
               variant="ghost"
-              onPress={async () => {
-                const db = await getDatabase();
-                await deleteStockMovement(db, m.id);
-                await load();
-              }}
+              accessibilityLabel="Delete stock movement"
+              onPress={() =>
+                confirmDelete('stock movement', async () => {
+                  const db = await getDatabase();
+                  await deleteStockMovement(db, m.id);
+                })
+              }
             />
           ) : null}
         </Card>
@@ -217,11 +234,13 @@ export function DayExtras({
             <Button
               title="✕"
               variant="ghost"
-              onPress={async () => {
-                const db = await getDatabase();
-                await deleteExpense(db, e.id);
-                await load();
-              }}
+              accessibilityLabel="Delete expense"
+              onPress={() =>
+                confirmDelete('expense', async () => {
+                  const db = await getDatabase();
+                  await deleteExpense(db, e.id);
+                })
+              }
             />
           ) : null}
         </Card>
@@ -253,11 +272,13 @@ export function DayExtras({
             <Button
               title="✕"
               variant="ghost"
-              onPress={async () => {
-                const db = await getDatabase();
-                await deleteShift(db, s.id);
-                await load();
-              }}
+              accessibilityLabel="Delete shift"
+              onPress={() =>
+                confirmDelete('shift', async () => {
+                  const db = await getDatabase();
+                  await deleteShift(db, s.id);
+                })
+              }
             />
           ) : null}
         </Card>
