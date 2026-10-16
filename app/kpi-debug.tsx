@@ -49,8 +49,8 @@ export default function KpiDebugScreen() {
     }, [load])
   );
 
-  const line = (label: string, value: string) => (
-    <View style={styles.line}>
+  const line = (key: string, label: string, value: string) => (
+    <View key={key} style={styles.line}>
       <Text style={[styles.key, { color: t.colors.textMuted }]}>{label}</Text>
       <Text style={[styles.val, { color: t.colors.text }]}>{value}</Text>
     </View>
@@ -79,11 +79,11 @@ export default function KpiDebugScreen() {
           <Text style={[styles.h, { color: t.colors.text }]}>Totals</Text>
           {totals ? (
             <>
-              {line('Revenue', `₹${totals.totalRevenue.toFixed(2)}`)}
-              {line('Litres', totals.totalLitres.toFixed(2))}
-              {line('Payments', `₹${totals.totalPayments.toFixed(2)}`)}
-              {line('Expenses', `₹${totals.totalExpenses.toFixed(2)}`)}
-              {line('Active days', String(totals.activeDays))}
+              {line('rev', 'Revenue', `₹${totals.totalRevenue.toFixed(2)}`)}
+              {line('lit', 'Litres', totals.totalLitres.toFixed(2))}
+              {line('pay', 'Payments', `₹${totals.totalPayments.toFixed(2)}`)}
+              {line('exp', 'Expenses', `₹${totals.totalExpenses.toFixed(2)}`)}
+              {line('days', 'Active days', String(totals.activeDays))}
             </>
           ) : null}
         </Card>
@@ -91,32 +91,32 @@ export default function KpiDebugScreen() {
         <Spacer />
         <Card>
           <Text style={[styles.h, { color: t.colors.text }]}>Sales trend ({trend.length})</Text>
-          {trend.map((p) => line(formatDisplay(p.date), `${p.litres.toFixed(0)} L · ₹${p.revenue.toFixed(0)}`))}
+          {trend.map((p) => line(`tr-${p.date}`, formatDisplay(p.date), `${p.litres.toFixed(0)} L · ₹${p.revenue.toFixed(0)}`))}
         </Card>
 
         <Spacer />
         <Card>
           <Text style={[styles.h, { color: t.colors.text }]}>Fuel mix</Text>
-          {fuelMix.map((f) => line(f.code, `${f.litres.toFixed(0)} L · ₹${f.revenue.toFixed(0)}`))}
+          {fuelMix.map((f) => line(`fm-${f.fuelTypeId}`, f.code, `${f.litres.toFixed(0)} L · ₹${f.revenue.toFixed(0)}`))}
         </Card>
 
         <Spacer />
         <Card>
           <Text style={[styles.h, { color: t.colors.text }]}>Payment mix</Text>
-          {payMix.map((p) => line(p.method, `₹${p.amount.toFixed(0)}`))}
+          {payMix.map((p) => line(`pm-${p.method}`, p.method, `₹${p.amount.toFixed(0)}`))}
         </Card>
 
         <Spacer />
         <Card>
           <Text style={[styles.h, { color: t.colors.text }]}>Station comparison</Text>
-          {comparison.map((c) => line(c.name, `${c.litres.toFixed(0)} L · ₹${c.revenue.toFixed(0)}`))}
+          {comparison.map((c) => line(`cmp-${c.stationId}`, c.name, `${c.litres.toFixed(0)} L · ₹${c.revenue.toFixed(0)}`))}
         </Card>
 
         <Spacer />
         <Card>
           <Text style={[styles.h, { color: t.colors.text }]}>Stock levels</Text>
           {stock.map((s) =>
-            line(`${s.stationName} · ${s.label} (${s.fuelCode})`, `${s.balance.toFixed(0)}${s.isLow ? ' ⚠ LOW' : ''}`)
+            line(`stk-${s.tankId}`, `${s.stationName} · ${s.label} (${s.fuelCode})`, `${s.balance.toFixed(0)}${s.isLow ? ' ⚠ LOW' : ''}`)
           )}
         </Card>
       </Screen>

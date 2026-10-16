@@ -61,8 +61,8 @@ export default function ReportsScreen() {
   );
 
   const shownFuel = fuelFilter === 'all' ? fuelMix : fuelMix.filter((f) => f.fuelTypeId === fuelFilter);
-  const line = (label: string, value: string, color?: string) => (
-    <View style={styles.line}>
+  const line = (key: string, label: string, value: string, color?: string) => (
+    <View key={key} style={styles.line}>
       <Text style={[styles.key, { color: t.colors.textMuted }]}>{label}</Text>
       <Text style={[styles.val, { color: color ?? t.colors.text }]}>{value}</Text>
     </View>
@@ -110,11 +110,11 @@ export default function ReportsScreen() {
       <Spacer />
       <Card>
         <Text style={[styles.h, { color: t.colors.text }]}>Summary</Text>
-        {line('Revenue', money(totals?.totalRevenue ?? 0), t.colors.primary)}
-        {line('Volume', litresFmt(totals?.totalLitres ?? 0))}
-        {line('Payments', money(totals?.totalPayments ?? 0))}
-        {line('Expenses', money(totals?.totalExpenses ?? 0), t.colors.danger)}
-        {line('Active days', String(totals?.activeDays ?? 0))}
+        {line('revenue', 'Revenue', money(totals?.totalRevenue ?? 0), t.colors.primary)}
+        {line('volume', 'Volume', litresFmt(totals?.totalLitres ?? 0))}
+        {line('payments', 'Payments', money(totals?.totalPayments ?? 0))}
+        {line('expenses', 'Expenses', money(totals?.totalExpenses ?? 0), t.colors.danger)}
+        {line('days', 'Active days', String(totals?.activeDays ?? 0))}
       </Card>
 
       <Spacer />
@@ -140,7 +140,7 @@ export default function ReportsScreen() {
         {payMix.length === 0 ? (
           <Text style={[styles.muted, { color: t.colors.textMuted }]}>No payments in range.</Text>
         ) : (
-          payMix.map((p) => line(p.method.toUpperCase(), money(p.amount)))
+          payMix.map((p) => line(`pay-${p.method}`, p.method.toUpperCase(), money(p.amount)))
         )}
       </Card>
 
@@ -149,7 +149,7 @@ export default function ReportsScreen() {
           <Spacer />
           <Card>
             <Text style={[styles.h, { color: t.colors.text }]}>By station</Text>
-            {comparison.map((c) => line(c.name, `${litresFmt(c.litres)} · ${money(c.revenue)}`))}
+            {comparison.map((c) => line(`st-${c.stationId}`, c.name, `${litresFmt(c.litres)} · ${money(c.revenue)}`))}
           </Card>
         </>
       ) : null}
