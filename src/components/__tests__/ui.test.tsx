@@ -1,6 +1,6 @@
 import { render, fireEvent } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Button, KPIStat, Badge, EmptyState } from '@/components';
+import { Button, KPIStat, Badge, EmptyState, Select } from '@/components';
 
 function wrap(ui: React.ReactElement) {
   return render(
@@ -50,5 +50,38 @@ describe('UI kit', () => {
     expect(getByText('Nothing here')).toBeTruthy();
     fireEvent.press(getByText('Add'));
     expect(onAction).toHaveBeenCalled();
+  });
+
+  it('fires Select onChange when a chip is pressed', () => {
+    const onChange = jest.fn();
+    const { getByText } = wrap(
+      <Select
+        options={[
+          { label: 'A', value: 'a' },
+          { label: 'B', value: 'b' },
+        ]}
+        value="a"
+        onChange={onChange}
+      />
+    );
+    fireEvent.press(getByText('B'));
+    expect(onChange).toHaveBeenCalledWith('b');
+  });
+
+  it('does not fire Select onChange when disabled', () => {
+    const onChange = jest.fn();
+    const { getByText } = wrap(
+      <Select
+        options={[
+          { label: 'A', value: 'a' },
+          { label: 'B', value: 'b' },
+        ]}
+        value="a"
+        onChange={onChange}
+        disabled
+      />
+    );
+    fireEvent.press(getByText('B'));
+    expect(onChange).not.toHaveBeenCalled();
   });
 });
