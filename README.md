@@ -25,6 +25,7 @@ backend, works fully offline.
 - react-native-gifted-charts (+ expo-linear-gradient) for visualizations
 - Zustand for state, date-fns for dates
 - expo-crypto (PIN hashing), expo-file-system + expo-sharing (backup)
+- expo-local-authentication (Face ID / Touch ID), @expo/vector-icons (Ionicons)
 
 ## Documentation
 Full planning and design docs live in [`docs/`](docs/):
