@@ -12,7 +12,7 @@ import {
 import { listStations } from '@/repositories/stationRepo';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useTheme } from '@/theme/useTheme';
-import { Screen, Header, Card, Button, Input, Select, Badge, EmptyState } from '@/components';
+import { Screen, Header, Card, Button, Input, Select, Badge, EmptyState , Spacer } from '@/components';
 
 export default function ProfilesScreen() {
   const t = useTheme();
@@ -113,16 +113,16 @@ export default function ProfilesScreen() {
         ))}
       </View>
 
-      <View style={styles.gap} />
+      <Spacer />
 
       {!adding ? (
         <Button title="+ Add staff profile" onPress={() => setAdding(true)} />
       ) : (
         <Card>
           <Text style={[styles.formTitle, { color: t.colors.text }]}>New staff profile</Text>
-          <View style={styles.gap} />
+          <Spacer />
           <Input label="Name" value={name} onChangeText={setName} placeholder="e.g. Ramesh" />
-          <View style={styles.gap} />
+          <Spacer />
           <Input
             label="PIN (4+ digits)"
             value={pin}
@@ -132,7 +132,7 @@ export default function ProfilesScreen() {
             maxLength={8}
             error={error}
           />
-          <View style={styles.gap} />
+          <Spacer />
           {stations.length === 0 ? (
             <EmptyState icon="⛽" title="No stations yet" message="Add stations first to assign access." />
           ) : (
@@ -151,7 +151,7 @@ export default function ProfilesScreen() {
               </View>
             </View>
           )}
-          <View style={styles.gap} />
+          <Spacer />
           <View style={styles.formActions}>
             <Button title="Cancel" variant="ghost" onPress={() => { setAdding(false); setError(null); }} />
             <Button title="Create" onPress={onAdd} loading={busy} />

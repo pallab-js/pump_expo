@@ -7,7 +7,7 @@ import { getStation, listFuelTypes } from '@/repositories/stationRepo';
 import { setPrice, listPrices, getEffectivePrices } from '@/repositories/priceRepo';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useTheme } from '@/theme/useTheme';
-import { Screen, Header, Card, Button, Input, Badge } from '@/components';
+import { Screen, Header, Card, Button, Input, Badge , Spacer } from '@/components';
 import { todayISO, formatDisplay } from '@/services/dates';
 
 export default function PricesScreen() {
@@ -94,7 +94,7 @@ export default function PricesScreen() {
 
         {savedMsg ? <Text style={[styles.saved, { color: t.colors.success }]}>{savedMsg}</Text> : null}
 
-        <View style={styles.gap} />
+        <Spacer />
         <Text style={[styles.section, { color: t.colors.text }]}>Price history</Text>
         {history.length === 0 ? (
           <Text style={[styles.muted, { color: t.colors.textMuted }]}>No price changes recorded yet.</Text>

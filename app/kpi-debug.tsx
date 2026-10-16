@@ -18,7 +18,7 @@ import {
 } from '@/services/aggregation';
 import { useFilterStore } from '@/stores/filterStore';
 import { useTheme } from '@/theme/useTheme';
-import { Screen, Header, Card, Select } from '@/components';
+import { Screen, Header, Card, Select , Spacer } from '@/components';
 import { formatDisplay } from '@/services/dates';
 
 export default function KpiDebugScreen() {
@@ -74,7 +74,7 @@ export default function KpiDebugScreen() {
           onChange={setPreset}
         />
 
-        <View style={styles.gap} />
+        <Spacer />
         <Card>
           <Text style={[styles.h, { color: t.colors.text }]}>Totals</Text>
           {totals ? (
@@ -88,31 +88,31 @@ export default function KpiDebugScreen() {
           ) : null}
         </Card>
 
-        <View style={styles.gap} />
+        <Spacer />
         <Card>
           <Text style={[styles.h, { color: t.colors.text }]}>Sales trend ({trend.length})</Text>
           {trend.map((p) => line(formatDisplay(p.date), `${p.litres.toFixed(0)} L · ₹${p.revenue.toFixed(0)}`))}
         </Card>
 
-        <View style={styles.gap} />
+        <Spacer />
         <Card>
           <Text style={[styles.h, { color: t.colors.text }]}>Fuel mix</Text>
           {fuelMix.map((f) => line(f.code, `${f.litres.toFixed(0)} L · ₹${f.revenue.toFixed(0)}`))}
         </Card>
 
-        <View style={styles.gap} />
+        <Spacer />
         <Card>
           <Text style={[styles.h, { color: t.colors.text }]}>Payment mix</Text>
           {payMix.map((p) => line(p.method, `₹${p.amount.toFixed(0)}`))}
         </Card>
 
-        <View style={styles.gap} />
+        <Spacer />
         <Card>
           <Text style={[styles.h, { color: t.colors.text }]}>Station comparison</Text>
           {comparison.map((c) => line(c.name, `${c.litres.toFixed(0)} L · ₹${c.revenue.toFixed(0)}`))}
         </Card>
 
-        <View style={styles.gap} />
+        <Spacer />
         <Card>
           <Text style={[styles.h, { color: t.colors.text }]}>Stock levels</Text>
           {stock.map((s) =>

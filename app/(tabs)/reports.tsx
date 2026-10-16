@@ -17,7 +17,7 @@ import {
 import { useFilterStore } from '@/stores/filterStore';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useTheme } from '@/theme/useTheme';
-import { Screen, Header, Card, Select, Badge, EmptyState } from '@/components';
+import { Screen, Header, Card, Select, Badge, EmptyState , Spacer } from '@/components';
 import { money, litresFmt } from '@/services/charts';
 import { formatDisplay } from '@/services/dates';
 
@@ -92,14 +92,14 @@ export default function ReportsScreen() {
         value={preset}
         onChange={setPreset}
       />
-      <View style={styles.gap} />
+      <Spacer />
       <Select<number | 'all'>
         label="Station"
         options={[{ label: 'All', value: 'all' }, ...stations.map((s) => ({ label: s.name, value: s.id }))]}
         value={stationFilter}
         onChange={setStationFilter}
       />
-      <View style={styles.gap} />
+      <Spacer />
       <Select<number | 'all'>
         label="Fuel type"
         options={[{ label: 'All', value: 'all' }, ...fuelMix.map((f) => ({ label: f.code, value: f.fuelTypeId }))]}
@@ -107,7 +107,7 @@ export default function ReportsScreen() {
         onChange={setFuelFilter}
       />
 
-      <View style={styles.gap} />
+      <Spacer />
       <Card>
         <Text style={[styles.h, { color: t.colors.text }]}>Summary</Text>
         {line('Revenue', money(totals?.totalRevenue ?? 0), t.colors.primary)}
@@ -117,7 +117,7 @@ export default function ReportsScreen() {
         {line('Active days', String(totals?.activeDays ?? 0))}
       </Card>
 
-      <View style={styles.gap} />
+      <Spacer />
       <Card>
         <Text style={[styles.h, { color: t.colors.text }]}>By fuel type</Text>
         {shownFuel.length === 0 ? (
@@ -134,7 +134,7 @@ export default function ReportsScreen() {
         )}
       </Card>
 
-      <View style={styles.gap} />
+      <Spacer />
       <Card>
         <Text style={[styles.h, { color: t.colors.text }]}>By payment method</Text>
         {payMix.length === 0 ? (
@@ -146,7 +146,7 @@ export default function ReportsScreen() {
 
       {stationFilter === 'all' && comparison.length > 1 ? (
         <>
-          <View style={styles.gap} />
+          <Spacer />
           <Card>
             <Text style={[styles.h, { color: t.colors.text }]}>By station</Text>
             {comparison.map((c) => line(c.name, `${litresFmt(c.litres)} · ${money(c.revenue)}`))}

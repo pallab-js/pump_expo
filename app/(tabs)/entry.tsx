@@ -14,7 +14,7 @@ import {
 } from '@/repositories/entryRepo';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useTheme } from '@/theme/useTheme';
-import { Screen, Header, Card, Button, Input, Select, Badge, EmptyState } from '@/components';
+import { Screen, Header, Card, Button, Input, Select, Badge, EmptyState , Spacer } from '@/components';
 import { DayExtras } from '@/components/DayExtras';
 import { todayISO, formatDisplay, daysAgoISO } from '@/services/dates';
 
@@ -151,10 +151,10 @@ export default function EntryScreen() {
             value={stationId}
             onChange={setStationId}
           />
-          <View style={styles.gap} />
+          <Spacer />
           <Select label="Date" options={dateOptions} value={date} onChange={setDate} />
 
-          <View style={styles.gap} />
+          <Spacer />
 
           {rows.length === 0 ? (
             <EmptyState icon="🔧" title="No nozzles" message="Set up nozzles for this station first." />
@@ -200,7 +200,7 @@ export default function EntryScreen() {
 
           {rows.length > 0 ? (
             <>
-              <View style={styles.gap} />
+              <Spacer />
               <Card style={styles.totalCard}>
                 <Text style={[styles.totalLabel, { color: t.colors.textMuted }]}>Day total</Text>
                 <View style={styles.totalRow}>
@@ -208,7 +208,7 @@ export default function EntryScreen() {
                   <Text style={[styles.totalAmount, { color: t.colors.primary }]}>₹{totals.amount.toFixed(2)}</Text>
                 </View>
               </Card>
-              <View style={styles.gap} />
+              <Spacer />
               <Button title="Save readings" onPress={saveAll} />
               {savedMsg ? <Text style={[styles.saved, { color: t.colors.success }]}>{savedMsg}</Text> : null}
               {error ? <Text style={[styles.err, { color: t.colors.danger }]}>{error}</Text> : null}

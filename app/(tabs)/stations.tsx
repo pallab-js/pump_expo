@@ -12,7 +12,7 @@ import {
 import { getAccessibleStations } from '@/repositories/profileRepo';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useTheme } from '@/theme/useTheme';
-import { Screen, Header, Card, Button, Input, Badge, EmptyState } from '@/components';
+import { Screen, Header, Card, Button, Input, Badge, EmptyState , Spacer } from '@/components';
 
 interface Row extends Station {
   tanks: number;
@@ -125,13 +125,13 @@ export default function StationsScreen() {
           <Text style={[styles.formTitle, { color: t.colors.text }]}>
             {editing ? 'Edit station' : 'New station'}
           </Text>
-          <View style={styles.gap} />
+          <Spacer />
           <Input label="Name" value={name} onChangeText={setName} placeholder="e.g. Highway Pump" />
-          <View style={styles.gap} />
+          <Spacer />
           <Input label="Location" value={location} onChangeText={setLocation} placeholder="e.g. NH-48, Km 23" />
-          <View style={styles.gap} />
+          <Spacer />
           <Input label="Code (optional)" value={code} onChangeText={setCode} placeholder="e.g. HP-01" error={error} />
-          <View style={styles.gap} />
+          <Spacer />
           <View style={styles.formActions}>
             <Button title="Cancel" variant="ghost" onPress={() => setShowForm(false)} />
             <Button title={editing ? 'Save' : 'Create'} onPress={onSave} loading={busy} />
@@ -139,7 +139,7 @@ export default function StationsScreen() {
         </Card>
       ) : null}
 
-      <View style={styles.gap} />
+      <Spacer />
 
       {rows.length === 0 && !showForm ? (
         <EmptyState

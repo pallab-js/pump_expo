@@ -21,7 +21,7 @@ import {
 import { useFilterStore } from '@/stores/filterStore';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useTheme } from '@/theme/useTheme';
-import { Screen, Header, Card, KPIStat, Select, Badge, EmptyState } from '@/components';
+import { Screen, Header, Card, KPIStat, Select, Badge, EmptyState , Spacer } from '@/components';
 import {
   money,
   litresFmt,
@@ -116,7 +116,7 @@ export default function DashboardScreen() {
         onChange={setPreset}
       />
 
-      <View style={styles.gap} />
+      <Spacer />
 
       {/* KPI cards */}
       <View style={styles.kpiRow}>
@@ -127,7 +127,7 @@ export default function DashboardScreen() {
           <KPIStat label="Volume" value={litresFmt(totals?.totalLitres ?? 0)} accent={t.colors.accent} icon="water-outline" />
         </View>
       </View>
-      <View style={styles.gap} />
+      <Spacer />
       <View style={styles.kpiRow}>
         <View style={styles.kpiCell}>
           <KPIStat label="Payments" value={money(totals?.totalPayments ?? 0)} icon="card-outline" />
@@ -137,7 +137,7 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      <View style={styles.gap} />
+      <Spacer />
 
       {/* Sales trend */}
       <Card>
@@ -169,7 +169,7 @@ export default function DashboardScreen() {
         )}
       </Card>
 
-      <View style={styles.gap} />
+      <Spacer />
 
       {/* Fuel mix + Payment mix */}
       <View style={styles.pieRow}>
@@ -212,7 +212,7 @@ export default function DashboardScreen() {
         </Card>
       </View>
 
-      <View style={styles.gap} />
+      <Spacer />
 
       {/* Station comparison */}
       {comparison.length > 0 ? (
@@ -235,7 +235,7 @@ export default function DashboardScreen() {
         </Card>
       ) : null}
 
-      <View style={styles.gap} />
+      <Spacer />
 
       {/* Stock levels */}
       <Card>

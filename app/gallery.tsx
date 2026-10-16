@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Screen, Header, Card, KPIStat, Button, Input, Select, Badge, EmptyState } from '@/components';
+import { Screen, Header, Card, KPIStat, Button, Input, Select, Badge, EmptyState , Spacer } from '@/components';
 import { useTheme } from '@/theme/useTheme';
 import { useThemeStore, type ThemePreference } from '@/stores/themeStore';
 
@@ -24,7 +24,7 @@ export default function GalleryScreen() {
         onChange={setPreference}
       />
 
-      <View style={styles.gap} />
+      <Spacer />
       <View style={styles.kpiRow}>
         <View style={styles.kpiCell}>
           <KPIStat label="Revenue" value="₹1.24L" sublabel="▲ 8%" icon="cash-outline" />
@@ -34,14 +34,14 @@ export default function GalleryScreen() {
         </View>
       </View>
 
-      <View style={styles.gap} />
+      <Spacer />
       <Card>
         <Text style={[styles.cardTitle, { color: t.colors.text }]}>Card + inputs</Text>
-        <View style={styles.gap} />
+        <Spacer />
         <Input label="Station name" value={text} onChangeText={setText} placeholder="e.g. Highway Pump" />
-        <View style={styles.gap} />
+        <Spacer />
         <Input label="With error" value="" onChangeText={() => {}} placeholder="Required" error="This field is required" />
-        <View style={styles.gap} />
+        <Spacer />
         <View style={styles.badgeRow}>
           <Badge label="Owner" tone="primary" />
           <Badge label="Low stock" tone="warning" />
@@ -49,7 +49,7 @@ export default function GalleryScreen() {
         </View>
       </Card>
 
-      <View style={styles.gap} />
+      <Spacer />
       <View style={styles.btnCol}>
         <Button title="Primary" onPress={() => {}} />
         <Button title="Secondary" variant="secondary" onPress={() => {}} />
@@ -58,7 +58,7 @@ export default function GalleryScreen() {
         <Button title="Loading" loading onPress={() => {}} />
       </View>
 
-      <View style={styles.gap} />
+      <Spacer />
       <Card padded={false}>
         <EmptyState
           icon="⛽"

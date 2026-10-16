@@ -15,7 +15,7 @@ import {
 } from '@/repositories/stationRepo';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useTheme } from '@/theme/useTheme';
-import { Screen, Header, Card, KPIStat, Button, Input, Select, Badge, EmptyState } from '@/components';
+import { Screen, Header, Card, KPIStat, Button, Input, Select, Badge, EmptyState, Spacer } from '@/components';
 import { getTotals, getSalesTrend, type KpiTotals, type TrendPoint } from '@/services/aggregation';
 import { listDayRecords, computeDaySales } from '@/repositories/entryRepo';
 import { money, litresFmt, toLineData } from '@/services/charts';
@@ -250,11 +250,11 @@ export default function StationDetailScreen() {
         {isOwner ? (
           <Card style={styles.form}>
             <Text style={[styles.formTitle, { color: t.colors.text }]}>Add tank</Text>
-            <View style={styles.gap} />
+            <Spacer />
             <Input label="Label" value={tankLabel} onChangeText={setTankLabel} placeholder="e.g. Tank 1" />
-            <View style={styles.gap} />
+            <Spacer />
             <Select label="Fuel type" options={fuelOptions} value={tankFuel} onChange={setTankFuel} />
-            <View style={styles.gap} />
+            <Spacer />
             <View style={styles.rowInputs}>
               <View style={styles.flex}>
                 <Input label="Capacity" value={tankCap} onChangeText={(v) => setTankCap(v.replace(/[^0-9.]/g, ''))} keyboardType="numeric" placeholder="10000" />
@@ -263,7 +263,7 @@ export default function StationDetailScreen() {
                 <Input label="Low alert" value={tankLow} onChangeText={(v) => setTankLow(v.replace(/[^0-9.]/g, ''))} keyboardType="numeric" placeholder="1500" />
               </View>
             </View>
-            <View style={styles.gap} />
+            <Spacer />
             <Button title="Add tank" onPress={addTank} />
           </Card>
         ) : null}
@@ -296,11 +296,11 @@ export default function StationDetailScreen() {
         {isOwner ? (
           <Card style={styles.form}>
             <Text style={[styles.formTitle, { color: t.colors.text }]}>Add nozzle</Text>
-            <View style={styles.gap} />
+            <Spacer />
             <Input label="Label" value={nozzleLabel} onChangeText={setNozzleLabel} placeholder="e.g. Nozzle A1" />
-            <View style={styles.gap} />
+            <Spacer />
             <Select label="Fuel type" options={fuelOptions} value={nozzleFuel} onChange={setNozzleFuel} />
-            <View style={styles.gap} />
+            <Spacer />
             {tanks.length > 0 ? (
               <Select
                 label="Linked tank (optional)"
@@ -309,7 +309,7 @@ export default function StationDetailScreen() {
                 onChange={setNozzleTank}
               />
             ) : null}
-            <View style={styles.gap} />
+            <Spacer />
             <Button title="Add nozzle" onPress={addNozzle} />
           </Card>
         ) : null}
